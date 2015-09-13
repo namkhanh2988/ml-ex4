@@ -98,6 +98,16 @@ end;
 Theta2_grad = 1/m .* Theta2_grad;
 Theta1_grad = 1/m .* Theta1_grad;
 
+% Regularization
+
+temp1 = Theta1;
+temp1(:,1) = 0;
+temp2 = Theta2;
+temp2(:,1) = 0;
+
+Theta2_grad = lambda / m .* temp2;
+Theta1_grad = lambda / m .* temp1;
+
 % =========================================================================
 
 % Unroll gradients
