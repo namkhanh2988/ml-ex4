@@ -22,6 +22,8 @@ Theta1 = reshape(nn_params(1:hidden_layer_size * (input_layer_size + 1)), ...
 Theta2 = reshape(nn_params((1 + (hidden_layer_size * (input_layer_size + 1))):end), ...
                  num_labels, (hidden_layer_size + 1));
 
+size(Theta1)
+size(Theta2)
 % Setup some useful variables
 m = size(X, 1);
          
@@ -62,25 +64,39 @@ Theta2_grad = zeros(size(Theta2));
 %               and Theta2_grad from Part 2.
 %
 
+h1 = X;
+z2 = [ones(m, 1) X] * Theta1';   % z2 is 5000 x 25
+h2 = sigmoid(z2);
+z3 = [ones(m, 1) h2] * Theta2';  % z3 is 5000 x 10
+h3 = sigmoid(z3);
 
+for i = 1:m,
+    yy = (1:num_labels)==y(i);
+    logh = log(h3(i,:));
+    log1h = log(1 .- h3(i,:));
+    cost = (yy*logh' + (1 .- yy)*log1h');
+    J = J + cost;
+end;
 
+J = -J/m;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+% Calculate the extra cost for regularization
+% NOTE: We need to ignore the first column since it's just the bias column
+reg_cost = lambda*(sumsq(Theta1(:)) - sumsq(Theta1(:,1)) + sumsq(Theta2(:)) - sumsq(Theta2(:, 1)))/(2*m);
+J = J + reg_cost;
 
 % -------------------------------------------------------------
+
+for i = 1:m,
+    yy = (1:num_labels)==y(i);
+    d3 = h3(i,:) - yy;  % d3 is 1 x 10
+    d2 = (d3 * Theta2(:, 2:end)) .* (sigmoidGradient(z2(i,:))); % d2 is 1x25. We need to remove the bias term from Theta
+    Theta2_grad = Theta2_grad + d3'*[1 h2(i,:)];  % d3 is 1x10, h2(i) is 1X25, theta2 is 10x26, we need to add bias term
+    Theta1_grad = Theta1_grad + d2'*[1 h1(i,:)];  % d2 is 1x25, h1(i) is 1x400, theta1 is 25x401, need to add bias term
+end;
+
+Theta2_grad = 1/m .* Theta2_grad;
+Theta1_grad = 1/m .* Theta1_grad;
 
 % =========================================================================
 
